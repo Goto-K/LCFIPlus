@@ -41,31 +41,38 @@ void VertexFindingwithDL::init(Parameters* param) {
 
   _primary_vertex = 0;
 
-  std::string vpricolname = param->get("VertexFindingwithDL.PrimaryVertexCollectionName",string("PrimaryVertex"));
-  std::string vseccolname = param->get("VertexFindingwithDL.SecondaryVerticesCollectionName",string("BuildUpVertex"));
+  std::string vpricolname = param->get("VertexFindingwithDL.PrimaryVertexCollectionName", string("PrimaryVertex"));
+  std::string vseccolname = param->get("VertexFindingwithDL.SecondaryVerticesCollectionName", string("BuildUpVertex"));
   Event::Instance()->Register(vpricolname.c_str(), _primary_vertex, EventStore::PERSIST);
   Event::Instance()->Register(vseccolname.c_str(), _secondary_vertices, EventStore::PERSIST);
+
+  _v0vertices = 0;
+  std::string v0vcolname = param->get("VertexFindingwithDL.V0VertexCollectionName", string(""));
+  if (v0vcolname != "") {
+    Event::Instance()->Register(v0vcolname.c_str(), _v0vertices, EventStore::PERSIST);
+  }
 
   // default setting
   Event::Instance()->setDefaultPrimaryVertex(vpricolname.c_str());
 
   NEventNumber = 0;
-  MaxTrack = 53;
-  NTrackVariable=22;
-  MaxPrimaryVertexLoop = 3;
+  MaxTrack = param->get("VertexFindingwithDL.MaxTrack", int(53));
+  NTrackVariable = param->get("VertexFindingwithDL.NTrackVariable", int(22));
+  MaxPrimaryVertexLoop = param->get("VertexFindingwithDL.MaxPrimaryVertexLoop", int(3));
 
-  ThresholdPairSecondaryScoreBBCC = 0.6;
-  ThresholdPairSecondaryScore = 0.8;
-  ThresholdPairPosScore = 5;
-  ThresholdPrimaryScore = 0.5;
-  ThresholdSecondaryScore = 0.8;
+  ThresholdPairSecondaryScoreBBCC = param->get("VertexFindingwithDL.ThresholdPairSecondaryScoreBBCC", double(0.6));
+  ThresholdPairSecondaryScore = param->get("VertexFindingwithDL.ThresholdPairSecondaryScore", double(0.8));
+  ThresholdPairPosScore = param->get("VertexFindingwithDL.ThresholdPairPosScore", double(5));
 
-  debug = false;
+  ThresholdPrimaryScore = param->get("VertexFindingwithDL.ThresholdPrimaryScore", double(0.5));
+  ThresholdSecondaryScore = param->get("VertexFindingwithDL.ThresholdSecondaryScore", double(0.8));
 
-  pair_path = "/home/goto/ILC/Deep_Learning/model/Pair_Model_vfdnn04_1Msamples_2500epochs";
-  pair_pos_path = "/home/goto/ILC/Deep_Learning/model/Pair_Pos_Model_vfdnn04_1Msamples_2500epochs";
-  lstm_path = "/home/goto/ILC/Deep_Learning/model/Attention_Bidirectional_VLSTM_Model_vfdnn06_50000samples_100epochs";
-  slstm_path = "/home/goto/ILC/Deep_Learning/model/Attention_Bidirectional_VLSTM_Model_vfdnn06_50000samples_100epochs_ps_100epochs_s";
+  debug = param->get("VertexFindingwithDL.Debug", bool(0));
+
+  pair_path = param->get("VertexFindingwithDL.PairModelPath", std::string("/home/goto/ILC/Deep_Learning/model/Pair_Model_vfdnn04_1Msamples_2500epochs"));
+  pair_pos_path = param->get("VertexFindingwithDL.PairPosModelPath", std::string("/home/goto/ILC/Deep_Learning/model/Pair_Pos_Model_vfdnn04_1Msamples_2500epochs"));
+  lstm_path = param->get("VertexFindingwithDL.LSTMModelPath", std::string("/home/goto/ILC/Deep_Learning/model/Attention_Bidirectional_VLSTM_Model_vfdnn06_50000samples_100epochs"));
+  slstm_path = param->get("VertexFindingwithDL.SLSTMModelPath", std::string("/home/goto/ILC/Deep_Learning/model/Attention_Bidirectional_VLSTM_Model_vfdnn06_50000samples_100epochs_ps_100epochs_s"));
 
   session_options = tensorflow::SessionOptions();
   run_options = tensorflow::RunOptions();
