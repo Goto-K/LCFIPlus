@@ -6,6 +6,7 @@
 #include "VertexFinderwithDL.h"
 #include "LcfiInterface.h"
 #include "VertexFitterSimple.h"
+#include "algoEtc.h"
 
 #include <tensorflow/cc/saved_model/loader.h>
 #include <tensorflow/cc/saved_model/tag_constants.h>
@@ -108,8 +109,8 @@ void VertexFinderwithDL::DebugPrintSecondarySort(std::vector<std::vector<double>
   if(secondary_seeds.size() > 10) iMax = 10;
   for(int i=0; i<iMax; i++){
     std::cout << "Track 1 " << secondary_seeds.at(i).at(0) << " Track 2 " << secondary_seeds.at(i).at(1)
-	      << " SV Score " << secondary_seeds.at(i).at(48)+secondary_seeds.at(i).at(49)+secondary_seeds.at(i).at(50)
-	      << " NC " << secondary_seeds.at(i).at(46) << " PV " << secondary_seeds.at(i).at(47) << std::endl;
+	      << " SV Score " << secondary_seeds.at(i).at(48)+secondary_seeds.at(i).at(49)+secondary_seeds.at(i).at(50)+secondary_seeds.at(i).at(51)
+	      << " NC " << secondary_seeds.at(i).at(46) << " PV " << secondary_seeds.at(i).at(47) << " Others " << secondary_seeds.at(i).at(52) << std::endl;
   }
 }
 
@@ -268,11 +269,11 @@ std::vector<std::vector<double> > VertexFinderwithDL::GetEventData(bool debug, s
 
   tensorflow::Tensor tvariables = VertexFinderwithDL::N2DVector2Tensor(variables);
   std::vector<tensorflow::Tensor> tmppair_outputs;
-  tensorflow::Status pair_runStatus = pair_model_bundle.GetSession()->Run({{"serving_default_input_1:0", tvariables}},
-				          		                  {"StatefulPartitionedCall:0"},
+  tensorflow::Status pair_runStatus = pair_model_bundle.GetSession()->Run({{"serving_default_Pair_Input:0", tvariables}},
+				          		                  {"StatefulPartitionedCall:0", "StatefulPartitionedCall:1"},
 						                          {}, &tmppair_outputs);
-  std::vector<std::vector<double> > _labels = VertexFinderwithDL::Tensor2N2DVector(tmppair_outputs[0]);
-  std::vector<std::vector<double> > _positions = VertexFinderwithDL::Tensor2N2DVector(tmppair_outputs[1]);
+  std::vector<std::vector<double> > _labels = VertexFinderwithDL::Tensor2N2DVector(tmppair_outputs[1]);
+  std::vector<std::vector<double> > _positions = VertexFinderwithDL::Tensor2N2DVector(tmppair_outputs[0]);
 
   std::vector<std::vector<double> > _index_variables = VertexFinderwithDL::ConcatN2DVector(index, variables); // 0,1:Track Num 2-45:Var
   std::vector<std::vector<double> > _variables_labels = VertexFinderwithDL::ConcatN2DVector(_index_variables, _labels); // 46:NC 47:PV 48SVCC 49SVBB 50TVCC 51SVBC 52Others
@@ -393,6 +394,8 @@ void VertexFinderwithDL::SecondaryVertexFinder(bool debug, double ThresholdSecon
     int track1 = secondary_event_data.at(i).at(0), track2 = secondary_event_data.at(i).at(1);
     if(std::find(primary_track_list.begin(), primary_track_list.end(), track1) != primary_track_list.end() or
        std::find(primary_track_list.begin(), primary_track_list.end(), track2) != primary_track_list.end()) continue;
+    if(std::find(track_list.begin(), track_list.end(), track1) == track_list.end() or
+       std::find(track_list.begin(), track_list.end(), track2) == track_list.end()) continue;
     if(debug==true){
       std::cout << "Track List" << std::endl;
       for(std::size_t i=0; i<track_list.size(); i++){
@@ -479,7 +482,7 @@ std::vector<std::vector<int> > VertexFinderwithDL::MergeSingleTrack(TrackVec& tr
 	merge_track_num = all_track_list.at(j);
       }
     }
-    if(chi==999) continue;
+    if(chi>=300) continue;
     bool single_single = true;
     for(std::size_t j=0; j<merge_secondary_track_lists.size(); j++){
       if(std::find(merge_secondary_track_lists.at(j).begin(), merge_secondary_track_lists.at(j).end(), merge_track_num) != merge_secondary_track_lists.at(j).end()){
@@ -504,8 +507,9 @@ void VertexFinderwithDL::PrimarySecondaryVertices(bool verbose, TrackVec& tracks
 
   if(primary_track_list.size()==0){
     std::cout << "Primary Vertex is not created" << std::endl;
-    Vertex* tmpprimary_vtx = 0;
-    vtx->push_back(tmpprimary_vtx);
+    Vertex* ip;
+    algoEtc::makeBeamVertex(ip, true);
+    vtx->push_back(ip);
   }
   else{
     std::vector<const Track*> primary_tracks;
@@ -514,9 +518,17 @@ void VertexFinderwithDL::PrimarySecondaryVertices(bool verbose, TrackVec& tracks
       if(verbose) std::cout << " " << primary_track_list.at(i) << " ";
       primary_tracks.push_back(tracks.at(primary_track_list.at(i)));
     }
-    Vertex* tmpprimary_vtx = VertexFitterSimple_V()(primary_tracks.begin(), primary_tracks.end());
+    Vertex* ip;
+    algoEtc::makeBeamVertex(ip, true);
+    Vertex* tmpprimary_vtx = VertexFitterSimple_V()(primary_tracks.begin(), primary_tracks.end(), ip);
     vtx->push_back(tmpprimary_vtx);
     if(verbose) std::cout << ": Chi2 " << tmpprimary_vtx->getChi2() << std::endl;
+    /*
+    const double* cov = tmpprimary_vtx->getCov();
+    for(int c=0; c<15; c++){
+      std::cout << cov[c] << " ";
+    }
+    */
   }
   if(secondary_track_lists.size()==0){
     std::cout << "Secondary Vertices are not exist" << std::endl;
