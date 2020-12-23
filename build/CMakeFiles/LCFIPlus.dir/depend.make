@@ -7645,6 +7645,7 @@ CMakeFiles/LCFIPlus.dir/src/VertexFinderwithDL.cc.o: ../include/LcfiInterface.h
 CMakeFiles/LCFIPlus.dir/src/VertexFinderwithDL.cc.o: ../include/TrackSelector.h
 CMakeFiles/LCFIPlus.dir/src/VertexFinderwithDL.cc.o: ../include/VertexFinderwithDL.h
 CMakeFiles/LCFIPlus.dir/src/VertexFinderwithDL.cc.o: ../include/VertexFitterSimple.h
+CMakeFiles/LCFIPlus.dir/src/VertexFinderwithDL.cc.o: ../include/algoEtc.h
 CMakeFiles/LCFIPlus.dir/src/VertexFinderwithDL.cc.o: ../include/geometry.h
 CMakeFiles/LCFIPlus.dir/src/VertexFinderwithDL.cc.o: ../include/lcfiplus.h
 CMakeFiles/LCFIPlus.dir/src/VertexFinderwithDL.cc.o: /gluster/data/ilc/ilcsoft/v02-02/LCFIVertex/v00-08/include/vertex_lcfi/algo/inc/pereventipfitter.h

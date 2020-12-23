@@ -101,6 +101,11 @@ void VertexFindingwithDL::process() {
   _secondary_vertices->clear();
 
   TrackVec& tracks = event->getTracks();
+  if(verbose==true and (tracks.size()<3 or tracks.size()>=60)){
+    std::cout << "Can not process this event" << std::endl;
+    return;
+  }
+
   std::vector<std::vector<double> > index, pairs, encoder_tracks, decoder_tracks;
   VertexFinderwithDL::GetPairsEncoderDecoderTracks(tracks, NTrackVariable, MaxTrack, index, pairs, encoder_tracks, decoder_tracks);
   if(debug==true) VertexFinderwithDL::DebugPrintVariableSize(pairs, encoder_tracks, decoder_tracks);
